@@ -75,8 +75,7 @@ def validate_gemini_key(api_key: str) -> bool:
         genai.configure(api_key=api_key)
         next(genai.list_models(page_size=1))
         return True
-    except Exception as e:
-        print("Gemini key validation failed:", e, flush=True)
+    except Exception:
         return False
 
 
@@ -198,18 +197,6 @@ def classify():
                 print("Gemini API error:", e, flush=True)
                 analysis = ""
                 info = None
-            finally:
-                # Log Gemini API response and parse result even when errors occur
-                print("=== Geminiの返答 ===", flush=True)
-                print(analysis, flush=True)
-                print("=== parse結果 ===", flush=True)
-                print(info, flush=True)
-                with open("gemini_log.csv", "a", encoding="utf-8") as f:
-                    f.write("=== Geminiの返答 ===\n")
-                    f.write(analysis + "\n")
-                    f.write("=== parse結果 ===\n")
-                    f.write(json.dumps(info, ensure_ascii=False) + "\n")
-                    f.write("=== END ===\n\n")
             if info:
                 category = info.get("カテゴリ名", "")
                 tags = info.get("タグ", [])
