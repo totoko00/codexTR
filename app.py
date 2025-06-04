@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -19,6 +20,30 @@ GENAI_MODEL = "gemini-pro"
 
 # path to OAuth2 credentials obtained from Google Cloud console
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json")
+
+
+def parse_analysis(text: str):
+    """Extract JSON object from Gemini response text."""
+    if not text:
+        return None
+    cleaned = text.strip()
+    # Remove Markdown code fences
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`")
+        if cleaned.lower().startswith("json"):
+            cleaned = cleaned.split("\n", 1)[-1]
+    cleaned = cleaned.strip()
+    # Search for JSON substring
+    match = re.search(r"\{.*\}", cleaned, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group())
+        except json.JSONDecodeError:
+            return None
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        return None
 
 @app.route('/')
 def index():
@@ -113,10 +138,15 @@ def classify():
             try:
                 response = model.generate_content(prompt)
                 analysis = response.text.strip()
-                info = json.loads(analysis)
-                category = info.get('カテゴリ名', '')
-                tags = info.get('タグ', [])
-                summary = info.get('サマリー', '')
+                info = parse_analysis(analysis)
+                if info:
+                    category = info.get('カテゴリ名', '')
+                    tags = info.get('タグ', [])
+                    summary = info.get('サマリー', '')
+                else:
+                    category = ''
+                    tags = []
+                    summary = ''
             except Exception:
                 category = ''
                 tags = []
