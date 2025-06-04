@@ -6,6 +6,9 @@ from googleapiclient.discovery import build
 import pandas as pd
 from datetime import datetime
 
+# Allow OAuth over HTTP when running locally. Remove or change for production.
+os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "dev")
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
