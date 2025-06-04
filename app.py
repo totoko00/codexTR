@@ -139,10 +139,11 @@ def classify():
                 response = model.generate_content(prompt)
                 analysis = response.text.strip()
                 info = parse_analysis(analysis)
-                print("=== Geminiの返答 ===")
-                print(analysis)
-                print("=== parse結果 ===")
-                print(info)
+                # Log Gemini API responses to ensure they are visible in the terminal
+                print("=== Geminiの返答 ===", flush=True)
+                print(analysis, flush=True)
+                print("=== parse結果 ===", flush=True)
+                print(info, flush=True)
                 if info:
                     category = info.get('カテゴリ名', '')
                     tags = info.get('タグ', [])
