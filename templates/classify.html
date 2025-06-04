@@ -6,6 +6,9 @@
 </head>
 <body>
   <h1>期間を指定してください</h1>
+  {% if error %}
+  <p style="color:red">{{ error }}</p>
+  {% endif %}
   <form method="POST">
     <label>Gemini APIキー:<br>
       <input type="password" name="gemini_key" required>
