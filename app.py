@@ -11,9 +11,7 @@ os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "dev")
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"
-        　"https://mail.google.com/",
-        　"https://www.googleapis.com/auth/script.external_request",]
+SCOPES = ["https://www.googleapis.com/auth/gmail.readonly","https://mail.google.com/","https://www.googleapis.com/auth/script.external_request"]
 
 # path to OAuth2 credentials obtained from Google Cloud console
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json")
