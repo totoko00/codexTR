@@ -14,6 +14,7 @@ ChatGPTのcodexの練習
    ```bash
    pip install -r requirements.txt
    ```
+   `google-generativeai` も requirements.txt に含まれているため、Gemini API を利用する場合は API キーを別途用意してください。
 3. アプリのセッション情報を保護するため、Flask がセッション署名に利用する秘密鍵を
    環境変数 `FLASK_SECRET` に設定します。以下のワンライナーで 16 バイトのランダム
    文字列を生成できます。
@@ -36,7 +37,22 @@ ChatGPTのcodexの練習
    python app.py
    ```
 
-5. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。期間を入力して「Start Classification」を押すと `static/result.csv` が生成され、ダウンロードが始まります。
+5. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。Gemini API キーと期間を入力して「分類を開始」を押すと `static/result.csv` が生成されます。CSV には以下の列が含まれます。
+
+   - `件名`
+   - `送信者`
+   - `受信日時`
+   - `カテゴリ名`
+   - `タグ`（キーワード2件を JSON 配列形式で格納）
+   - `サマリー`（15 文字以内の要約）
+
+   ダウンロード後は表計算ソフトなどで開いて内容を確認してください。
+
+   Gemini から返される結果が Markdown 形式になる場合でも、アプリ側で JSON 部分
+   を抽出して解析するよう改善しています。また、JSON でない返答も `カテゴリ名:`
+   などの形式から推測して取り出す処理を追加しました。カテゴリやタグ、サマリー
+   が空欄になる場合は `gemini_log.csv` を参照し、Gemini API から返される内容を確
+   認してください。
 
 ### OAuth のスコープエラーが出る場合
 
