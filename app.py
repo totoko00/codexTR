@@ -5,6 +5,8 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 import pandas as pd
 from datetime import datetime
+import base64
+import google.generativeai as genai
 
 # Allow OAuth over HTTP when running locally. Remove or change for production.
 os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
@@ -12,6 +14,7 @@ os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", "dev")
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly","https://mail.google.com/","https://www.googleapis.com/auth/script.external_request"]
+GENAI_MODEL = "gemini-pro"
 
 # path to OAuth2 credentials obtained from Google Cloud console
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json")
@@ -62,25 +65,56 @@ def classify():
     creds = Credentials(**creds_dict)
     service = build('gmail', 'v1', credentials=creds)
     if request.method == 'POST':
+        gemini_key = request.form['gemini_key']
+        session['gemini_key'] = gemini_key
+        genai.configure(api_key=gemini_key)
+        model = genai.GenerativeModel(GENAI_MODEL)
+
         start_date = request.form['start_date']
         end_date = request.form['end_date']
         query = f"after:{start_date} before:{end_date}" if end_date else f"after:{start_date}"
         results = service.users().messages().list(userId='me', q=query).execute()
         messages = results.get('messages', [])
         data = []
+
+        def extract_body(payload):
+            if 'parts' in payload:
+                for part in payload['parts']:
+                    if part.get('mimeType', '').startswith('text/plain'):
+                        data_b64 = part.get('body', {}).get('data')
+                        if data_b64:
+                            return base64.urlsafe_b64decode(data_b64).decode('utf-8', 'ignore')
+                    if 'parts' in part:
+                        text = extract_body(part)
+                        if text:
+                            return text
+            else:
+                data_b64 = payload.get('body', {}).get('data')
+                if data_b64:
+                    return base64.urlsafe_b64decode(data_b64).decode('utf-8', 'ignore')
+            return ''
+
         for m in messages:
-            msg = service.users().messages().get(userId='me', id=m['id'], format='metadata').execute()
+            msg = service.users().messages().get(userId='me', id=m['id'], format='full').execute()
             headers = {h['name']: h['value'] for h in msg.get('payload', {}).get('headers', [])}
             labels = msg.get('labelIds', [])
             snippet = msg.get('snippet', '')
+            body = extract_body(msg.get('payload', {}))
             dt_ms = int(msg.get('internalDate'))
             dt = datetime.fromtimestamp(dt_ms/1000).isoformat()
+            text = f"件名: {headers.get('Subject', '')}\n本文: {body or snippet}\nこのメールを分類してください。"
+            try:
+                response = model.generate_content(text)
+                analysis = response.text.strip()
+            except Exception:
+                analysis = ''
             data.append({
                 'Date': dt,
                 'From': headers.get('From', ''),
                 'Subject': headers.get('Subject', ''),
                 'Labels': ','.join(labels),
-                'Snippet': snippet
+                'Snippet': snippet,
+                'GeminiAnalysis': analysis
             })
         df = pd.DataFrame(data)
         os.makedirs('static', exist_ok=True)
@@ -93,6 +127,7 @@ def classify():
 def reset_credentials():
     """Clear saved OAuth credentials from the session."""
     session.pop('credentials', None)
+    session.pop('gemini_key', None)
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

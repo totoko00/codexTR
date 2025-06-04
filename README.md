@@ -14,6 +14,7 @@ ChatGPTのcodexの練習
    ```bash
    pip install -r requirements.txt
    ```
+   `google-generativeai` も requirements.txt に含まれているため、Gemini API を利用する場合は API キーを別途用意してください。
 3. アプリのセッション情報を保護するため、Flask がセッション署名に利用する秘密鍵を
    環境変数 `FLASK_SECRET` に設定します。以下のワンライナーで 16 バイトのランダム
    文字列を生成できます。
@@ -36,7 +37,7 @@ ChatGPTのcodexの練習
    python app.py
    ```
 
-5. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。期間を入力して「Start Classification」を押すと `static/result.csv` が生成され、ダウンロードが始まります。
+5. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。Gemini API キーと期間を入力して「分類を開始」を押すと `static/result.csv` が生成され、ダウンロードが始まります。
 
 ### OAuth のスコープエラーが出る場合
 
