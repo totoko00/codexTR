@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -97,24 +98,38 @@ def classify():
         for m in messages:
             msg = service.users().messages().get(userId='me', id=m['id'], format='full').execute()
             headers = {h['name']: h['value'] for h in msg.get('payload', {}).get('headers', [])}
-            labels = msg.get('labelIds', [])
             snippet = msg.get('snippet', '')
             body = extract_body(msg.get('payload', {}))
             dt_ms = int(msg.get('internalDate'))
             dt = datetime.fromtimestamp(dt_ms/1000).isoformat()
-            text = f"件名: {headers.get('Subject', '')}\n本文: {body or snippet}\nこのメールを分類してください。"
+
+            prompt = (
+                "次のメール本文からカテゴリ名、関連キーワードを2つ、"
+                "15文字以内の日本語要約を含むJSONを出力してください。\n"
+                "出力例: {\"カテゴリ名\": \"...\", \"タグ\": [\"...\", \"...\"], \"サマリー\": \"...\"}\n"
+                f"件名: {headers.get('Subject', '')}\n本文: {body or snippet}"
+            )
+
             try:
-                response = model.generate_content(text)
+                response = model.generate_content(prompt)
                 analysis = response.text.strip()
+                info = json.loads(analysis)
+                category = info.get('カテゴリ名', '')
+                tags = info.get('タグ', [])
+                summary = info.get('サマリー', '')
             except Exception:
+                category = ''
+                tags = []
+                summary = ''
                 analysis = ''
+
             data.append({
-                'Date': dt,
-                'From': headers.get('From', ''),
-                'Subject': headers.get('Subject', ''),
-                'Labels': ','.join(labels),
-                'Snippet': snippet,
-                'GeminiAnalysis': analysis
+                '件名': headers.get('Subject', ''),
+                '送信者': headers.get('From', ''),
+                '受信日時': dt,
+                'カテゴリ名': category,
+                'タグ': json.dumps(tags, ensure_ascii=False),
+                'サマリー': summary
             })
         df = pd.DataFrame(data)
         os.makedirs('static', exist_ok=True)
