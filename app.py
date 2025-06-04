@@ -88,5 +88,11 @@ def classify():
         return send_file(csv_file, as_attachment=True)
     return render_template('classify.html')
 
+@app.route('/reset')
+def reset_credentials():
+    """Clear saved OAuth credentials from the session."""
+    session.pop('credentials', None)
+    return redirect(url_for('index'))
+
 if __name__ == '__main__':
     app.run(debug=True)
