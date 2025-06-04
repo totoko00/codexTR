@@ -21,7 +21,7 @@ SCOPES = [
     "https://mail.google.com/",
     "https://www.googleapis.com/auth/script.external_request",
 ]
-GENAI_MODEL = "gemini-pro"
+GENAI_MODEL = "models/gemini-1.5-pro-latest"
 
 # path to OAuth2 credentials obtained from Google Cloud console
 CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json")
