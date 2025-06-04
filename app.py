@@ -139,6 +139,10 @@ def classify():
                 response = model.generate_content(prompt)
                 analysis = response.text.strip()
                 info = parse_analysis(analysis)
+                print("=== Geminiの返答 ===")
+                print(analysis)
+                print("=== parse結果 ===")
+                print(info)
                 if info:
                     category = info.get('カテゴリ名', '')
                     tags = info.get('タグ', [])
