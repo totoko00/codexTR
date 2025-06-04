@@ -14,9 +14,18 @@ ChatGPTのcodexの練習
    ```bash
    pip install -r requirements.txt
    ```
-3. アプリのセッション情報を保護するため、環境変数 `FLASK_SECRET` に秘密鍵として使う適当な文字列を設定します。設定後、下記のコマンドでアプリを起動します。
+3. アプリのセッション情報を保護するため、Flask がセッション署名に利用する秘密鍵を
+   環境変数 `FLASK_SECRET` に設定します。以下のワンライナーで 16 バイトのランダム
+   文字列を生成できます。
+
    ```bash
-   export FLASK_SECRET=your_secret  # Windows の場合は set FLASK_SECRET=your_secret
+   python -c "import secrets; print(secrets.token_hex(16))"
+   ```
+
+   生成した文字列を `FLASK_SECRET` に設定した上でアプリを起動します。
+
+   ```bash
+   export FLASK_SECRET=<生成した文字列>  # Windows の場合は set FLASK_SECRET=<文字列>
    python app.py
    ```
 4. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。期間を入力して「Start Classification」を押すと `static/result.csv` が生成され、ダウンロードが始まります。
