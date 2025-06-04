@@ -1,0 +1,2 @@
+# codexTR
+ChatGPTのcodexの練習
