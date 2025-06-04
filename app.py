@@ -144,6 +144,12 @@ def classify():
                 print(analysis, flush=True)
                 print("=== parse結果 ===", flush=True)
                 print(info, flush=True)
+                with open("gemini_log.csv", "a", encoding="utf-8") as f:
+                    f.write("=== Geminiの返答 ===\n")
+                    f.write(analysis + "\n")
+                    f.write("=== parse結果 ===\n")
+                    f.write(json.dumps(info, ensure_ascii=False) + "\n")
+                    f.write("=== END ===\n\n")
                 if info:
                     category = info.get('カテゴリ名', '')
                     tags = info.get('タグ', [])
