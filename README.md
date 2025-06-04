@@ -22,10 +22,18 @@ ChatGPTのcodexの練習
    python -c "import secrets; print(secrets.token_hex(16))"
    ```
 
-   生成した文字列を `FLASK_SECRET` に設定した上でアプリを起動します。
+   生成した文字列を `FLASK_SECRET` に設定します。
 
    ```bash
    export FLASK_SECRET=<生成した文字列>  # Windows の場合は set FLASK_SECRET=<文字列>
+   ```
+
+4. 開発環境で HTTP のまま OAuth2 を利用する場合は、`OAUTHLIB_INSECURE_TRANSPORT=1`
+   を設定してからアプリを起動します。本番運用では HTTPS を使用してください。
+
+   ```bash
+   export OAUTHLIB_INSECURE_TRANSPORT=1  # Windows の場合は set OAUTHLIB_INSECURE_TRANSPORT=1
    python app.py
    ```
-4. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。期間を入力して「Start Classification」を押すと `static/result.csv` が生成され、ダウンロードが始まります。
+
+5. ブラウザで `http://localhost:5000` にアクセスし、指示に従ってGoogleアカウントを認証します。期間を入力して「Start Classification」を押すと `static/result.csv` が生成され、ダウンロードが始まります。
