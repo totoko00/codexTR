@@ -28,27 +28,45 @@ CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(__file__), "credentials.json"
 
 
 def parse_analysis(text: str):
-    """Extract JSON object from Gemini response text."""
+    """Extract analysis fields from Gemini response text."""
     if not text:
         return None
     cleaned = text.strip()
-    # Remove Markdown code fences
+
+    # Remove Markdown code fences such as ```json
     if cleaned.startswith("```"):
         cleaned = cleaned.strip("`")
         if cleaned.lower().startswith("json"):
             cleaned = cleaned.split("\n", 1)[-1]
     cleaned = cleaned.strip()
-    # Search for JSON substring
+
+    # First try to parse a JSON object directly
     match = re.search(r"\{.*\}", cleaned, re.DOTALL)
     if match:
         try:
             return json.loads(match.group())
         except json.JSONDecodeError:
-            return None
+            pass
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
-        return None
+        pass
+
+    # Fallback: parse lines like "カテゴリ名: ..." etc.
+    result = {}
+    m = re.search(r"カテゴリ(?:名)?[:：]\s*(.+)", cleaned)
+    if m:
+        result["カテゴリ名"] = m.group(1).strip()
+    m = re.search(r"タグ[:：]\s*(.+)", cleaned)
+    if m:
+        tags_raw = m.group(1).strip()
+        tags = re.split(r"[、,\s]+", tags_raw)
+        result["タグ"] = [t for t in tags if t][:2]
+    m = re.search(r"サマリー[:：]\s*(.+)", cleaned)
+    if m:
+        result["サマリー"] = m.group(1).strip()
+
+    return result if result else None
 
 
 def validate_gemini_key(api_key: str) -> bool:
@@ -176,7 +194,12 @@ def classify():
                 response = model.generate_content(prompt)
                 analysis = response.text.strip()
                 info = parse_analysis(analysis)
-                # Log Gemini API responses to ensure they are visible in the terminal
+            except Exception as e:
+                print("Gemini API error:", e, flush=True)
+                analysis = ""
+                info = None
+            finally:
+                # Log Gemini API response and parse result even when errors occur
                 print("=== Geminiの返答 ===", flush=True)
                 print(analysis, flush=True)
                 print("=== parse結果 ===", flush=True)
@@ -187,19 +210,14 @@ def classify():
                     f.write("=== parse結果 ===\n")
                     f.write(json.dumps(info, ensure_ascii=False) + "\n")
                     f.write("=== END ===\n\n")
-                if info:
-                    category = info.get("カテゴリ名", "")
-                    tags = info.get("タグ", [])
-                    summary = info.get("サマリー", "")
-                else:
-                    category = ""
-                    tags = []
-                    summary = ""
-            except Exception:
+            if info:
+                category = info.get("カテゴリ名", "")
+                tags = info.get("タグ", [])
+                summary = info.get("サマリー", "")
+            else:
                 category = ""
                 tags = []
                 summary = ""
-                analysis = ""
 
             data.append(
                 {
