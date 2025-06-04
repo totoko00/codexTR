@@ -83,6 +83,7 @@ def classify():
                 'Snippet': snippet
             })
         df = pd.DataFrame(data)
+        os.makedirs('static', exist_ok=True)
         csv_file = os.path.join('static', 'result.csv')
         df.to_csv(csv_file, index=False)
         return send_file(csv_file, as_attachment=True)
