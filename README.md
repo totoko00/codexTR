@@ -10,6 +10,10 @@ ChatGPTのcodexの練習
 
 ### 使い方
 1. Google Cloud Console で Gmail API を有効化し、OAuth クライアント ID を作成して `credentials.json` をリポジトリのルートに配置してください。
+   その際、承認済みのリダイレクト URI として以下を登録します。
+   - http://localhost:5000
+   - http://127.0.0.1:5000
+   - http://127.0.0.1:5000/oauth2callback
 2. 依存パッケージをインストールします。
    ```bash
    pip install -r requirements.txt
