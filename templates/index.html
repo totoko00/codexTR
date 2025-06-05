@@ -1,14 +1,17 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Gmail分類アプリ</title>
-</head>
-<body>
-  <h1>Gmail分類アプリ</h1>
-  <p>まず、Gmailへのアクセスを許可してください。</p>
-  <a href="{{ url_for('authorize') }}">Gmailを認証する</a>
-  <br>
-  <a href="{{ url_for('reset_credentials') }}">保存された認証情報を削除</a>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gmail分類アプリ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Gmail分類アプリ</h1>
+      <p>まず、Gmailへのアクセスを許可してください。</p>
+      <a href="{{ url_for('authorize') }}">Gmailを認証する</a>
+      <br />
+      <a href="{{ url_for('reset_credentials') }}">保存された認証情報を削除</a>
+    </div>
+  </body>
 </html>
