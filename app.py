@@ -6,7 +6,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
 import google.generativeai as genai
 from typing import Optional
@@ -133,7 +133,14 @@ def classify():
         session["gemini_key"] = gemini_key
         if not validate_gemini_key(gemini_key):
             error = "無効なGemini APIキーです。正しいキーを入力してください。"
-            return render_template("classify.html", error=error)
+            default_end = datetime.today().date().isoformat()
+            default_start = (datetime.today().date() - timedelta(days=20)).isoformat()
+            return render_template(
+                "classify.html",
+                error=error,
+                default_start=default_start,
+                default_end=default_end,
+            )
         genai.configure(api_key=gemini_key)
         model = genai.GenerativeModel(GENAI_MODEL)
 
@@ -221,7 +228,14 @@ def classify():
         csv_file = os.path.join("static", "result.csv")
         df.to_csv(csv_file, index=False)
         return send_file(csv_file, as_attachment=True)
-    return render_template("classify.html", error=error)
+    default_end = datetime.today().date().isoformat()
+    default_start = (datetime.today().date() - timedelta(days=20)).isoformat()
+    return render_template(
+        "classify.html",
+        error=error,
+        default_start=default_start,
+        default_end=default_end,
+    )
 
 
 @app.route("/reset")
